@@ -1,0 +1,252 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Kollywood Quiz 2025</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: url('https://wallpaperaccess.com/full/1989116.jpg') no-repeat center center/cover;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .quiz-container {
+      background: rgba(255, 255, 255, 0.95);
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+      max-width: 500px;
+      width: 100%;
+      text-align: center;
+      animation: fadeIn 0.5s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    h2 {
+      color: #333;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    li {
+      padding: 12px;
+      margin: 10px 0;
+      background: #f1f1f1;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    li:hover {
+      background-color: #d0e8ff;
+    }
+
+    li.selected {
+      background-color: #74c0fc;
+      color: white;
+    }
+
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 16px;
+      background: #0077b6;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background: #023e8a;
+    }
+
+    #result h2 {
+      color: #0077b6;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    #progress {
+      margin-bottom: 10px;
+      font-weight: bold;
+    }
+
+    #timer {
+      font-size: 18px;
+      margin: 10px 0;
+      color: #e63946;
+    }
+
+    .dark-mode {
+      background: rgba(40, 40, 40, 0.95);
+      color: white;
+    }
+
+    .dark-mode li {
+      background: #555;
+      color: white;
+    }
+
+    .dark-mode li:hover {
+      background: #888;
+    }
+
+    .toggle-theme {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      padding: 8px 16px;
+      background: #000;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <button class="toggle-theme" onclick="toggleTheme()">Toggle Dark Mode</button>
+  <div class="quiz-container">
+    <div id="progress">Question 1 of 5</div>
+    <div id="timer">Time Left: <span id="time">30</span>s</div>
+    <h2 id="question"></h2>
+    <ul id="options"></ul>
+    <button id="nextBtn">Next</button>
+    <div id="result" class="hidden">
+      <h2>Your Score: <span id="score"></span>/5</h2>
+      <p>Congratulations on completing the quiz!</p>
+    </div>
+  </div>
+
+  <audio id="bgMusic" src="https://cdn.pixabay.com/download/audio/2022/10/27/audio_fdaedfd399.mp3?filename=cool-electronic-background-music-124009.mp3" autoplay loop></audio>
+  <audio id="clickSound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_720c1b354c.mp3?filename=click-124467.mp3"></audio>
+
+  <script>
+    const questions = [
+      {
+        question: "Which Tamil film, starring Ajith Kumar, became the highest-grossing Tamil film of 2025 with worldwide collections exceeding ₹240 crore?",
+        options: ["Vidaamuyarchi", "Dragon", "Good Bad Ugly", "Retro"],
+        answer: "Good Bad Ugly"
+      },
+      {
+        question: "Who directed the 2025 Tamil film *Thug Life*, starring Kamal Haasan and Trisha?",
+        options: ["Shankar", "Mani Ratnam", "Lokesh Kanagaraj", "Nelson Dilipkumar"],
+        answer: "Mani Ratnam"
+      },
+      {
+        question: "Which actor confirmed singing a song for Pawan Kalyan's film *They Call Him OG*?",
+        options: ["Dhanush", "Vijay Sethupathi", "Silambarasan TR", "Anirudh Ravichander"],
+        answer: "Silambarasan TR"
+      },
+      {
+        question: "Which 2025 Tamil film, starring Vijay Sethupathi, received mixed reviews for its predictable storyline?",
+        options: ["Ace", "Dragon", "Retro", "Vidaamuyarchi"],
+        answer: "Ace"
+      },
+      {
+        question: "Which upcoming Tamil film, directed by Atlee and starring Allu Arjun, features Deepika Padukone & Mrunal Thakur?",
+        options: ["AA22", "Thug Life", "Vidaamuyarchi", "Dragon"],
+        answer: "AA22"
+      }
+    ];
+
+    let currentQuestion = 0;
+    let score = 0;
+    let selectedOption = null;
+    let timer;
+    let timeLeft = 30;
+
+    const questionEl = document.getElementById('question');
+    const optionsEl = document.getElementById('options');
+    const nextBtn = document.getElementById('nextBtn');
+    const resultEl = document.getElementById('result');
+    const scoreEl = document.getElementById('score');
+    const progressEl = document.getElementById('progress');
+    const timeEl = document.getElementById('time');
+    const clickSound = document.getElementById('clickSound');
+
+    function loadQuestion() {
+      const q = questions[currentQuestion];
+      questionEl.textContent = q.question;
+      progressEl.textContent = `Question ${currentQuestion + 1} of ${questions.length}`;
+      optionsEl.innerHTML = '';
+      q.options.forEach(option => {
+        const li = document.createElement('li');
+        li.textContent = option;
+        li.addEventListener('click', () => {
+          clickSound.play();
+          document.querySelectorAll('li').forEach(li => li.classList.remove('selected'));
+          li.classList.add('selected');
+          selectedOption = option;
+        });
+        optionsEl.appendChild(li);
+      });
+      resetTimer();
+    }
+
+    function resetTimer() {
+      clearInterval(timer);
+      timeLeft = 30;
+      timeEl.textContent = timeLeft;
+      timer = setInterval(() => {
+        timeLeft--;
+        timeEl.textContent = timeLeft;
+        if (timeLeft <= 0) {
+          clearInterval(timer);
+          nextBtn.click();
+        }
+      }, 1000);
+    }
+
+    nextBtn.addEventListener('click', () => {
+      if (selectedOption === questions[currentQuestion].answer) {
+        score++;
+      }
+      selectedOption = null;
+      currentQuestion++;
+      if (currentQuestion < questions.length) {
+        loadQuestion();
+      } else {
+        showResult();
+      }
+    });
+
+    function showResult() {
+      clearInterval(timer);
+      optionsEl.classList.add('hidden');
+      nextBtn.classList.add('hidden');
+      resultEl.classList.remove('hidden');
+      scoreEl.textContent = score;
+    }
+
+    function toggleTheme() {
+      document.body.classList.toggle('dark-mode');
+      document.querySelector('.quiz-container').classList.toggle('dark-mode');
+    }
+
+    loadQuestion();
+  </script>
+</body>
+</html>
